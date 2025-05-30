@@ -1,25 +1,39 @@
-name: ci 
+name: Deploy MkDocs to GitHub Pages
+
 on:
   push:
     branches:
-      - master 
       - main
+      - master
+
 permissions:
   contents: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
           python-version: 3.x
-      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV 
-      - uses: actions/cache@v3
+
+      - name: Set cache ID
+        run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
+
+      - name: Restore pip cache
+        uses: actions/cache@v3
         with:
-          key: ${{ github.ref }}
-          path: .cache
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ env.cache_id }}
           restore-keys: |
-            mkdocs-material-
-      - run: pip install mkdocs-material 
-      - run: mkdocs gh-deploy --force
+            pip-${{ runner.os }}-
+
+      - name: Install MkDocs Material
+        run: pip install mkdocs-material
+
+      - name: Deploy to GitHub Pages
+        run: mkdocs gh-deploy --force
